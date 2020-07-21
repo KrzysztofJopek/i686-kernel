@@ -1,7 +1,7 @@
 CC = gcc
 AS = nasm
 LD = ld
-CFLAGS = -m32
+CFLAGS = -m32 
 OUTPUT_OPTION = -MMD -MP -o $@
 .DEFAULT_GOAL = kern
 
@@ -11,6 +11,9 @@ DEPS = $(SRCS:%.c=%.d)
 -include $(DEPS)
 
 #-------
+
+debug: CFLAGS += -ggdb -D_DEBUG_
+debug: kern
 
 kern: $(OBJS) link.ld
 	$(LD) -m elf_i386 -T link.ld -o $@ $(OBJS)
@@ -34,4 +37,4 @@ clean_tags:
 	@echo Tags cleaned
 
 run: kern
-	qemu-system-i386 -kernel kern
+	qemu-system-i386 -s -kernel kern
