@@ -19,6 +19,7 @@
 #define	COL_WHITE	0xf
 
 void clear();
-void print(char* str);
+void print(const char* str);
+void putc(const char c);
 
 #endif

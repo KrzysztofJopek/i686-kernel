@@ -1,7 +1,7 @@
 #include "print.h"
 
-#define MAX_W 25
-#define MAX_H 80
+#define MAX_W 80
+#define MAX_H 25
 #define VIDEO_MEM 0xb8000
 #define VIDEO_MEM_SIZE (MAX_W*MAX_H)
 
@@ -36,24 +36,34 @@ static int set_color(char txt_col, char back_col)
 	return 1;
 }
 
-//TODO handle newline
-void print(char* str)
+static int vid_pos = 0;
+void print(const char* str)
 {
-	struct vid_buf* vidp = (struct vid_buf*)VIDEO_MEM;
-	char* vidpc = (char*)VIDEO_MEM;
-	clear();
-	int i=0;
-	while(*str){
-		vidp++->sym = *str++;	
+	static struct vid_buf* vidp = (struct vid_buf*)VIDEO_MEM;
+	while(vid_pos<VIDEO_MEM_SIZE && *str){
+		if(*str == '\n'){
+			vid_pos = (vid_pos/MAX_W + 1) * MAX_W;
+		}
+		else{
+			vidp[vid_pos++].sym = *str;
+		}
+		str++;
 	}
+}
+
+void putc(const char c)
+{
+	char str[2] = {c, '\0'};
+	print(str);
 }
 
 void clear()
 {
-	struct vid_buf* vidp = (struct vid_buf*)VIDEO_MEM;
+	static struct vid_buf* vidp = (struct vid_buf*)VIDEO_MEM;
 	set_color(COL_WHITE, COL_BLACK);
-	for(int i=0; i<VIDEO_MEM_SIZE; i++){
+	for(int i=0; i<VIDEO_MEM_SIZE; ++i){
 		vidp[i].sym = ' ';
 		vidp[i].col = curr_color;
 	}
+	vid_pos = 0;
 }
