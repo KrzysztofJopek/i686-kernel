@@ -7,13 +7,20 @@ section .text
         dd - (0x1BADB002 + 0x00)
 
 global _start
+global keyboard_handler
+
 extern kmain
+extern keyboard_handler_main
 
 _start:
 	cli
 	mov esp, stack
 	call kmain
 	hlt
+
+keyboard_handler:
+	call    keyboard_handler_main
+	iretd
 
 section .bss
 resb 8192

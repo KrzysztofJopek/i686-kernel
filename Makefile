@@ -1,7 +1,7 @@
 CC = gcc
 AS = nasm
 LD = ld
-CFLAGS = -m32 
+CFLAGS = -m32 -Werror -Wextra -fstack-protector -Wno-builtin-declaration-mismatch
 OUTPUT_OPTION = -MMD -MP -o $@
 .DEFAULT_GOAL = kern
 
