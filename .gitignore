@@ -1,0 +1,6 @@
+tags
+cscope.out
+
+kern
+*.d
+*.o
