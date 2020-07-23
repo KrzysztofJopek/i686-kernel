@@ -1,4 +1,5 @@
 #include "print.h"
+#include "uart.h"
 
 #define MAX_W 80
 #define MAX_H 25
@@ -66,4 +67,12 @@ void clear()
 		vidp[i].col = curr_color;
 	}
 	vid_pos = 0;
+}
+
+void log(const char* str)
+{
+	while(*str){
+		uart_write(*str++, COM1_PORT);
+	}
+	uart_write('\n', COM1_PORT);
 }

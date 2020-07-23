@@ -37,4 +37,4 @@ clean_tags:
 	@echo Tags cleaned
 
 run: kern
-	qemu-system-i386 -s -kernel kern
+	qemu-system-i386 -s -kernel kern -serial stdio

@@ -3,6 +3,7 @@
 #include "port.h"
 #include "print.h"
 #include "kbd.h"
+#include "uart.h"
 
 #define IDT_SIZE 256
 #define PIC1_CMD 0x20
@@ -10,8 +11,10 @@
 #define PIC2_CMD 0xA0
 #define PIC2_DATA 0xA1
 
+
 extern void load_idt(void* idt_ptr);
 extern void keyboard_handler(void);
+extern void uart_handler(void);
 
 struct IDT_entry{
 	uint16_t offset_low;
@@ -60,6 +63,8 @@ void setup_int()
 {
 
 	setup_entry(keyboard_handler, 0x21);
+	setup_entry(uart_handler, 0x24);
+	setup_uart(COM1_PORT);
 	setup_pic();
 	struct{
 		uint16_t size;
@@ -74,11 +79,11 @@ void setup_int()
 		     );
 
 	//unmask
-	outb(0xFD, PIC1_DATA);
+	outb(0b11101101, PIC1_DATA);
 }
 
 //TODO define ports, handle error
-void keyboard_handler_main(void)
+void keyboard_handler_main()
 {
 	outb(PIC1_CMD, PIC1_CMD);
 	uint8_t status = inb(0x64); //keyboard status port 

@@ -7,7 +7,8 @@ void kmain()
 	asm volatile ("1: jmp 1b");
 #endif
 
-	setup_int();
 	clear();
+	setup_int();
+	log("INT INIT DONE");
 	while(1);
 }

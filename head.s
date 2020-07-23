@@ -8,9 +8,11 @@ section .text
 
 global _start
 global keyboard_handler
+global uart_handler
 
 extern kmain
 extern keyboard_handler_main
+extern uart_handler_main
 
 _start:
 	cli
@@ -20,6 +22,10 @@ _start:
 
 keyboard_handler:
 	call    keyboard_handler_main
+	iretd
+
+uart_handler:
+	call    uart_handler_main
 	iretd
 
 section .bss

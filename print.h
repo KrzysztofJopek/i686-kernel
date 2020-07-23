@@ -21,5 +21,6 @@
 void clear();
 void print(const char* str);
 void putc(const char c);
+void log(const char* str);
 
 #endif
