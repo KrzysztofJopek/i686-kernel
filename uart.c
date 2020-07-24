@@ -1,5 +1,7 @@
+#include "uart.h"
 #include "port.h"
 #include "print.h"
+#include "fd.h"
 
 #define OFF_DATA 0x0 //[DLAB:0] Data register
 #define OFF_DL 0x0 //[DLAB:1] Divisior - low byte
@@ -48,8 +50,45 @@ static inline int uart_write_ready(uint16_t port)
 	return !!(inb(port + OFF_LS) & 0x20);
 }
 
-void uart_write(uint8_t c, uint16_t port)
+static void uart_putc(uint8_t c, uint16_t port)
 {
 	while(!uart_write_ready){}
 	outb(c, port);
 }
+int32_t uart_open(uint8_t* path)
+{
+	//always return 1 for now
+	return 1;
+}
+
+int32_t uart_write(int32_t fd, uint8_t* buff, uint32_t count)
+{
+	//ignore fd for now
+	if(buff == (void*)0){
+		return -1;
+	}
+	for(uint32_t i=0; i<count ; i++){
+		uart_putc(buff[i], COM1_PORT);
+	}
+}
+
+int32_t uart_read(int32_t fd, uint8_t* buff, uint32_t count)
+{
+	//not implemented
+	return 0;
+}
+
+int32_t uart_close(int32_t fd)
+{
+	//always return success for now
+	return 0;
+}
+
+struct fops fops = {
+	.open = uart_open,
+	.write = uart_write,
+	.read = uart_read,
+	.close = uart_close
+};
+
+struct fops* COM_fops = &fops;

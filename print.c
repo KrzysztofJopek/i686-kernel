@@ -1,5 +1,6 @@
 #include "print.h"
 #include "uart.h"
+#include "fd.h"
 
 #define MAX_W 80
 #define MAX_H 25
@@ -71,8 +72,14 @@ void clear()
 
 void log(const char* str)
 {
-	while(*str){
-		uart_write(*str++, COM1_PORT);
+	static int32_t fd = -1;
+	if(fd == -1){
+		fd = open("C1");
 	}
-	uart_write('\n', COM1_PORT);
+	//TODO strlen
+	uint32_t size = 0;
+	const char* strp = str;
+	while(*strp++) size++;
+
+	write(fd, (void*)str, size);
 }
