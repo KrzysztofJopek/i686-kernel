@@ -4,6 +4,7 @@ LD = ld
 CFLAGS = -m32 -Werror -Wextra -fstack-protector -Wno-builtin-declaration-mismatch
 OUTPUT_OPTION = -MMD -MP -o $@
 .DEFAULT_GOAL = kern
+GDB=cgdb
 
 SRCS = $(wildcard *.c)
 OBJS = $(SRCS:%.c=%.o) head.o
@@ -22,7 +23,7 @@ head.o: head.s
 	$(AS) -f elf32 $< -o $@
 #-------
 
-.PHONY: tags clean clean_tags run
+.PHONY: tags clean clean_tags run gdb
 
 tags:
 	ctags -R
@@ -38,3 +39,6 @@ clean_tags:
 
 run: kern
 	qemu-system-i386 -s -kernel kern -serial stdio
+
+gdb:
+	$(GDB) kern -x .gdbargs
