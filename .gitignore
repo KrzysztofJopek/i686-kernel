@@ -2,5 +2,6 @@ tags
 cscope.out
 
 kern
+obj/
 *.d
 *.o
