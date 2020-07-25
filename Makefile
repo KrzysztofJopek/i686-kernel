@@ -1,15 +1,16 @@
 CC = gcc
 AS = nasm
 LD = ld
-CFLAGS = -m32 -Werror -Wextra -fstack-protector -Wno-builtin-declaration-mismatch
+CFLAGS = -Iinc -m32 -Werror -Wextra -fstack-protector -Wno-builtin-declaration-mismatch
 OUTPUT_OPTION = -MMD -MP -o $@
 .DEFAULT_GOAL = kern
 GDB=cgdb
 
-SRCS = $(wildcard *.c)
-OBJS = $(SRCS:%.c=%.o) head.o
-DEPS = $(SRCS:%.c=%.d)
+SRCS = $(wildcard src/*.c)
+OBJS = $(addprefix obj/,$(notdir $(SRCS:%.c=%.o))) obj/head.o
+DEPS = $(OBJS:%.o=%.d)
 -include $(DEPS)
+
 
 #-------
 
@@ -19,8 +20,11 @@ debug: kern
 kern: $(OBJS) link.ld
 	$(LD) -m elf_i386 -T link.ld -o $@ $(OBJS)
 
-head.o: head.s
+obj/head.o: src/head.s
 	$(AS) -f elf32 $< -o $@
+
+obj/%.o: src/%.c
+	$(CC) -c $(CFLAGS) $(OUTPUT_OPTION) $<
 #-------
 
 .PHONY: tags clean clean_tags run gdb
