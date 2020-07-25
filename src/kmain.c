@@ -1,6 +1,7 @@
 #include "print.h"
 #include "int.h"
 #include "fd.h"
+#include "log.h"
 
 void kmain()
 {
@@ -11,6 +12,6 @@ void kmain()
 	clear();
 	setup_int();
 	setup_fd();
-	log("INT INIT DONE");
+	LOG("INT and FD init done");
 	while(1);
 }

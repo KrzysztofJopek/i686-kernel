@@ -1,6 +1,7 @@
 #include "print.h"
 #include "uart.h"
 #include "fd.h"
+#include "strutils.h"
 
 #define MAX_W 80
 #define MAX_H 25
@@ -10,24 +11,24 @@
 
 //XXX check in docs if blink bit exist
 struct vid_col{
-	unsigned char txt_col:4;
-	unsigned char back_col:3;
-	unsigned char blink:1;
+	uint8_t txt_col:4;
+	uint8_t back_col:3;
+	uint8_t blink:1;
 };
 
 struct vid_buf{
-	unsigned char sym;
+	uint8_t sym;
 	struct vid_col col;
 };
 
 static struct vid_col curr_color;
-static int set_color(char txt_col, char back_col)
+static int set_color(uint8_t txt_col, uint8_t back_col)
 {
-	if(txt_col<COL_BLACK || txt_col>COL_WHITE){
+	if(txt_col>COL_WHITE){
 		//wrong text color
 		return 0;
 	}
-	if(back_col<COL_BLACK || back_col>COL_LIGHT_GRAY){
+	if(back_col>COL_LIGHT_GRAY){
 		//wrong background color
 		return 0;
 	}
@@ -39,7 +40,7 @@ static int set_color(char txt_col, char back_col)
 }
 
 static int vid_pos = 0;
-void print(const char* str)
+void print(const uint8_t* str)
 {
 	static struct vid_buf* vidp = (struct vid_buf*)VIDEO_MEM;
 	while(vid_pos<VIDEO_MEM_SIZE && *str){
@@ -53,9 +54,9 @@ void print(const char* str)
 	}
 }
 
-void putc(const char c)
+void putc(const uint8_t c)
 {
-	char str[2] = {c, '\0'};
+	uint8_t str[2] = {c, '\0'};
 	print(str);
 }
 
@@ -70,16 +71,12 @@ void clear()
 	vid_pos = 0;
 }
 
-void log(const char* str)
+void log(const uint8_t* str)
 {
 	static int32_t fd = -1;
 	if(fd == -1){
 		fd = open("C1");
 	}
-	//TODO strlen
-	uint32_t size = 0;
-	const char* strp = str;
-	while(*strp++) size++;
 
-	write(fd, (void*)str, size);
+	write(fd, (void*)str, strlen(str));
 }
