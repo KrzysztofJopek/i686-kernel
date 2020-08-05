@@ -1,14 +1,14 @@
 CC = gcc
 PR = -g
+CFLAGS = -m32
 
-all: halloc.o main.o
-	$(CC) $(PR) halloc.o main.o -o start
+all: halloc.o
 
 halloc.o: halloc.c
-	$(CC) $(PR) -c halloc.c -o halloc.o
+	$(CC) $(PR) $(CFLAGS) -c halloc.c -o halloc.o
 
 main.o: main.c
-	$(CC) $(PR) -c main.c -o main.o
+	$(CC) $(PR) $(CFLAGS) -c main.c -o main.o
 
 run: all
 	./start

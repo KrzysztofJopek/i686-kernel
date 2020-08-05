@@ -1,10 +1,24 @@
 #include "halloc.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <assert.h>
 
-//#define __DEBUG__
+//BEGIN - HACKS TO MAKE KERNEL WORK
+//TODO use kernel log 
+#ifdef __DEBUG__
+#undef __DEBUG__
+#endif
+
+extern char end_mem[];
+static void* sbrk(int size)
+{
+	return end_mem;
+}
+
+static void assert(int x)
+{
+}
+
+//END - HACKS TO MAKE KERNEL WORK
+
+
 #define SMALLESTBLOCK 16
 
 static void* firstBlock = NULL;

@@ -6,4 +6,5 @@ SECTIONS
    .text : { *(.text) }
    .data : { *(.data) }
    .bss  : { *(.bss)  }
+   PROVIDE(end_mem = .); /*End of memory*/
  }

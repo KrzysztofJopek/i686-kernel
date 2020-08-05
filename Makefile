@@ -1,14 +1,17 @@
 CC = gcc
 AS = nasm
 LD = ld
-CFLAGS = -Iinc -m32 -Werror -Wextra -fno-stack-protector -Wno-builtin-declaration-mismatch
+INCFLAGS = -Iinc -Ihalloc
+
+CFLAGS = $(INCFLAGS) -m32 -Werror -Wextra -fno-stack-protector -Wno-builtin-declaration-mismatch
 OUTPUT_OPTION = -MMD -MP -o $@
 .DEFAULT_GOAL = kern
 GDB=cgdb
 
 SRCS = $(wildcard src/*.c)
-OBJS = $(addprefix obj/,$(notdir $(SRCS:%.c=%.o))) obj/head.o
+OBJS = $(addprefix obj/,$(notdir $(SRCS:%.c=%.o))) obj/head.o halloc/halloc.o
 DEPS = $(OBJS:%.o=%.d)
+
 -include $(DEPS)
 
 
@@ -25,6 +28,9 @@ obj/head.o: src/head.s
 
 obj/%.o: src/%.c
 	$(CC) -c $(CFLAGS) $(OUTPUT_OPTION) $<
+
+halloc/halloc.o: halloc/halloc.c halloc/halloc.h
+	$(MAKE) -C halloc halloc.o
 #-------
 
 .PHONY: tags clean clean_tags run gdb
@@ -35,6 +41,7 @@ tags:
 
 clean: 
 	@rm -f kern $(OBJS) $(DEPS)
+	@$(MAKE) -C halloc clean
 	@echo Repository cleaned
 
 clean_tags:
