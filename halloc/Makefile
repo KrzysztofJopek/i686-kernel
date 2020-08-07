@@ -1,6 +1,6 @@
 CC = gcc
 PR = -g
-CFLAGS = -m32
+CFLAGS = -m32 -Wno-builtin-declaration-mismatch
 
 all: halloc.o
 

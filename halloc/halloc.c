@@ -1,6 +1,7 @@
 #include "halloc.h"
 
 //BEGIN - HACKS TO MAKE KERNEL WORK
+#include "stdint.h"
 //TODO use kernel log 
 #ifdef __DEBUG__
 #undef __DEBUG__
@@ -14,6 +15,17 @@ static void* sbrk(int size)
 
 static void assert(int x)
 {
+}
+
+static void memcpy(void* dst, void* src, size_t size)
+{
+	if(size <= 0)
+		return;
+	if(!dst || !src)
+		return;
+
+	while(size--)
+		*(uint8_t*)dst++ = *(uint8_t*)src++;
 }
 
 //END - HACKS TO MAKE KERNEL WORK
@@ -34,6 +46,7 @@ typedef struct{
 }endStruct;
 
 //private functions
+static void inFree(void* ptr);
 static int initBlock(void* ptr, size_t size);
 static int isBlockFree(beginStruct* location);
 static size_t getRealSize(beginStruct* ptr);
@@ -73,6 +86,23 @@ void* halloc(size_t size)
 	return NULL;
 }
 
+void* hrealloc(void* src, size_t size)
+{
+	src = src-sizeof(beginStruct);
+	if(!src)
+		return NULL;
+	if(isBlockFree(src))
+		return NULL;
+
+	//TODO check if continous memory available
+	void* dest = halloc(size);
+	if(!dest)
+		return NULL;
+	memcpy(dest, src, size);
+	inFree(src);
+	return dest;
+}
+
 void hfree(void* ptr)
 {
 	ptr = ptr-sizeof(beginStruct);
@@ -80,6 +110,11 @@ void hfree(void* ptr)
 		return;
 	if(isBlockFree(ptr))
 		return;
+	inFree(ptr);
+}
+
+static void inFree(void* ptr)
+{
 	setFreeSize(ptr);
 	if(getNextBlock(ptr)!=endMem)
 		mergeBlocks(ptr);
