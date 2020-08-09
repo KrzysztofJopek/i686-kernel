@@ -1,7 +1,7 @@
 #ifndef _FD_H_
 #define _FD_H_
 
-#include <inttypes.h>
+#include <stdint.h>
 //TODO implement the rest
 struct fops{
 	int32_t (*open) (uint8_t* path);

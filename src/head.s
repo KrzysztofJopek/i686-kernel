@@ -1,33 +1,39 @@
-bits 32
-
-section .text
-        align 4
-        dd 0x1BADB002
-        dd 0x00
-        dd - (0x1BADB002 + 0x00)
+extern kmain
+extern keyboard_handler_main
+extern uart_handler_main
 
 global _start
 global keyboard_handler
 global uart_handler
 
-extern kmain
-extern keyboard_handler_main
-extern uart_handler_main
+MB_MAGIC equ 0x1BADB002
+MB_FLAGS equ (1<<0)|(1<<1)
+MB_CHECKSUM equ (0 - (MB_MAGIC + MB_FLAGS))
 
-_start:
-	cli
-	mov esp, stack
-	call kmain
-	hlt
-
-keyboard_handler:
-	call    keyboard_handler_main
-	iretd
-
-uart_handler:
-	call    uart_handler_main
-	iretd
+section .multiboot
+        ALIGN 4
+        dd MB_MAGIC
+        dd MB_FLAGS
+        dd MB_CHECKSUM
 
 section .bss
-resb 8192
-stack:
+	align 16
+	stack_bottom:
+	resb 8196
+	stack_top:
+
+section .text
+	_start:
+		cli
+		mov esp, stack_top
+		call kmain
+		hlt
+
+	keyboard_handler:
+		call    keyboard_handler_main
+		iretd
+
+	uart_handler:
+		call    uart_handler_main
+		iretd
+

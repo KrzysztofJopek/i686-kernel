@@ -72,7 +72,7 @@ void setup_int()
 	} __attribute__((packed)) idt_ptr = {sizeof(struct IDT_entry)*IDT_SIZE-1, IDT};
 
 	asm volatile (
-			"lidt (%0);"
+			"lidt [%0];"
 			"sti;"
 			:
 			: "q" (&idt_ptr)

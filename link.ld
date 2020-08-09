@@ -1,10 +1,28 @@
-OUTPUT_FORMAT(elf32-i386)
+/*OUTPUT_FORMAT(elf32-i386)*/
 ENTRY(_start)
 SECTIONS
  {
-   . = 0x100000;
-   .text : { *(.text) }
-   .data : { *(.data) }
-   .bss  : { *(.bss)  }
+   . = 1M;
+   .rodata BLOCK(4k) : ALIGN(4k)
+   {
+      *(.multiboot)
+   }
+   .text BLOCK(4k) : ALIGN(4k)
+   {
+      *(.text)
+   }
+   .rodata BLOCK(4k) : ALIGN(4k)
+   {
+      *(.rodata)
+   }
+   .data BLOCK(4k) : ALIGN(4k)
+   {
+      *(.data)
+   }
+   .bss BLOCK(8k) : ALIGN(4k)
+   {
+      *(COMMON)
+      *(.bss)
+   }
    PROVIDE(end_mem = .); /*End of memory*/
  }
