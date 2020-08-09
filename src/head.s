@@ -1,3 +1,4 @@
+bits 32
 extern kmain
 extern keyboard_handler_main
 extern uart_handler_main
@@ -24,7 +25,47 @@ section .bss
 
 section .text
 	_start:
-		cli
+		cli ; disable interrupts
+
+		;clear segments
+		xor ax, ax
+		mov ds, ax
+		mov es, ax
+
+		
+		;enable a20
+		set_20.1:
+		in al, 0x64
+		test al, 0x2
+		jnz set_20.1
+		mov al, 0xd1
+		out 0x64, al
+
+		set_20.2:
+		in al, 0x64
+		test al, 0x2
+		jnz set_20.2
+		mov al, 0xdf
+		out 0x60, al
+
+		;enable protected mode
+		lgdt [gdtdesc]
+		mov eax, cr0
+		or eax, 1
+		mov cr0, eax
+
+		jmp 0x8:en32
+
+		en32:
+		mov ax, 0x10
+		mov ds, ax
+		mov es, ax
+		mov ss, ax
+
+		xor ax, ax
+		mov fs, ax
+		mov gs, ax
+
 		mov esp, stack_top
 		call kmain
 		hlt
@@ -37,3 +78,26 @@ section .text
 		call    uart_handler_main
 		iretd
 
+
+
+gdt:
+	gdt_null:
+	dq 0
+	gdt_code:
+	dw 0xffff
+	dw 0
+	db 0
+	db 0x9a
+	db 11001111b
+	db 0
+	gdt_data:
+	dw 0xffff
+	dw 0
+	db 0
+	db 0x92
+	db 11001111b
+	db 0
+
+gdtdesc:
+	dw (gdtdesc - gdt - 1)
+	dd gdt
