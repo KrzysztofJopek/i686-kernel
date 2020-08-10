@@ -3,6 +3,7 @@
 #include "fd.h"
 #include "log.h"
 #include "mm.h"
+#include "halloc.h"
 
 void kmain(multiboot_info_t* m_info)
 {
@@ -15,5 +16,6 @@ void kmain(multiboot_info_t* m_info)
 	setup_fd();
 	LOG("INT and FD init done\n");
 	setup_mem(m_info);
+	char* xd = halloc(5);
 	while(1);
 }

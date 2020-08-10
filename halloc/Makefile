@@ -1,6 +1,7 @@
 CC = gcc
 PR = -g
-CFLAGS = -m32 -Wno-builtin-declaration-mismatch
+INCFLAGS = -I../inc
+CFLAGS = -m32 -Wno-builtin-declaration-mismatch $(INCFLAGS)
 
 all: halloc.o
 

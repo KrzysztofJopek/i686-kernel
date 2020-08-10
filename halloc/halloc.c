@@ -1,4 +1,5 @@
 #include "halloc.h"
+#include "mm.h"
 
 //BEGIN - HACKS TO MAKE KERNEL WORK
 #include "stdint.h"
@@ -8,9 +9,15 @@
 #endif
 
 extern char end_mem[];
-static void* sbrk(int size)
+static void* sbrk(uint32_t inc)
 {
-	return end_mem;
+	static uint32_t size = 0;
+	if(is_in_ram_region(end_mem+size+inc)) {
+		void* prev = end_mem + size;
+		size += inc;
+		return prev;
+	}
+	return (void*)-1;
 }
 
 static void assert(int x)
