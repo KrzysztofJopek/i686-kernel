@@ -8,16 +8,23 @@ struct ram_region{
 
 #define MAX_RAM_REGIONS 8
 static struct ram_region ram_regions[MAX_RAM_REGIONS];
+/*
+ * check if addr is in RAM region
+ * return ram_region number starting from 1 if exist or 0 if doesn't exist
+ */
 uint8_t is_in_ram_region(void* ptr)
 {
 	for(uint8_t i=0; i<MAX_RAM_REGIONS; i++){
 		if(ptr >= ram_regions[i].start && ptr <= ram_regions[i].end){
-			return 1;
+			return i+1; // return number of region
 		}
 	}
 	return 0;
 }
 
+/*
+ * looping over memory maps provided by multiboot and add RAM to ram_regions array
+ */
 void setup_mem(multiboot_info_t* m_info)
 {
 	multiboot_memory_map_t* mem_entry = (multiboot_memory_map_t*)m_info->mmap_addr;

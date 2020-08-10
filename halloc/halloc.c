@@ -12,7 +12,9 @@ extern char end_mem[];
 static void* sbrk(uint32_t inc)
 {
 	static uint32_t size = 0;
-	if(is_in_ram_region(end_mem+size+inc)) {
+	uint8_t region_start = is_in_ram_region(end_mem+size);
+	uint8_t region_end   = is_in_ram_region(end_mem+size+inc);
+	if(region_start && region_start == region_end) {
 		void* prev = end_mem + size;
 		size += inc;
 		return prev;
