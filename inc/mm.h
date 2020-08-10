@@ -4,6 +4,6 @@
 #include <stdint.h>
 
 void setup_mem(multiboot_info_t* m_info);
-uint8_t is_in_ram_region(void* ptr);
+uint8_t get_ram_region(void* ptr);
 
 #endif

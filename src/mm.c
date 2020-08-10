@@ -12,7 +12,7 @@ static struct ram_region ram_regions[MAX_RAM_REGIONS];
  * check if addr is in RAM region
  * return ram_region number starting from 1 if exist or 0 if doesn't exist
  */
-uint8_t is_in_ram_region(void* ptr)
+uint8_t get_ram_region(void* ptr)
 {
 	for(uint8_t i=0; i<MAX_RAM_REGIONS; i++){
 		if(ptr >= ram_regions[i].start && ptr <= ram_regions[i].end){
@@ -31,8 +31,7 @@ void setup_mem(multiboot_info_t* m_info)
 	uint8_t num_ram = 0;
 	while(mem_entry < (multiboot_memory_map_t*)(m_info->mmap_addr + m_info->mmap_length)){
 		if(mem_entry->type == 1){
-			num_ram++;
-			if(num_ram <= MAX_RAM_REGIONS){
+			if(num_ram < MAX_RAM_REGIONS){
 				ram_regions[num_ram].start = (void*)((uint32_t)mem_entry->addr);
 				ram_regions[num_ram].end = (void*)((uint32_t)mem_entry->addr + (uint32_t)mem_entry->len - 1);
 				LOG("found usable RAM\n");
@@ -40,6 +39,7 @@ void setup_mem(multiboot_info_t* m_info)
 			else{
 				LOG("WARNING: found usable RAM, but MAX_RAM_REGIONS is too small\n");
 			}
+			num_ram++;
 		}
 		else{
 			LOG("found not usable memory\n");
