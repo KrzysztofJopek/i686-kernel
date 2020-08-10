@@ -2,8 +2,9 @@
 #include "int.h"
 #include "fd.h"
 #include "log.h"
+#include "mm.h"
 
-void kmain()
+void kmain(multiboot_info_t* m_info)
 {
 #ifdef _DEBUG_
 	asm volatile ("1: jmp 1b");
@@ -12,6 +13,7 @@ void kmain()
 	clear();
 	setup_int();
 	setup_fd();
-	LOG("INT and FD init done");
+	LOG("INT and FD init done\n");
+	setup_mem(m_info);
 	while(1);
 }

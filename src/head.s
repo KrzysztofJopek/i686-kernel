@@ -23,17 +23,33 @@ section .bss
 	resb 8196
 	stack_top:
 
+section .data
+	mem_ptr dd 0
+
+
 section .text
 	_start:
 		cli ; disable interrupts
+		mov [mem_ptr], ebx
 
 		;clear segments
 		xor ax, ax
 		mov ds, ax
 		mov es, ax
 
+		call set_gdt
+
+	
+		mov esp, stack_top
+		mov ebx, [mem_ptr]
+		push ebx
+		call kmain
+		hlt
+
 		
 		;enable a20
+		;not used -- multiboot
+	enable_a20:
 		set_20.1:
 		in al, 0x64
 		test al, 0x2
@@ -48,7 +64,7 @@ section .text
 		mov al, 0xdf
 		out 0x60, al
 
-		;enable protected mode
+	set_gdt:
 		lgdt [gdtdesc]
 		mov eax, cr0
 		or eax, 1
@@ -65,10 +81,9 @@ section .text
 		xor ax, ax
 		mov fs, ax
 		mov gs, ax
+		ret
 
-		mov esp, stack_top
-		call kmain
-		hlt
+
 
 	keyboard_handler:
 		call    keyboard_handler_main
