@@ -10,7 +10,7 @@ OUTPUT_OPTION = -MMD -MP -o $@
 GDB=cgdb
 
 SRCS = $(wildcard src/*.c)
-OBJS = $(addprefix obj/,$(notdir $(SRCS:%.c=%.o))) obj/head.o halloc/halloc.o
+OBJS = $(addprefix obj/,$(notdir $(SRCS:%.c=%.o))) obj/head.o obj/swtch.o halloc/halloc.o
 DEPS = $(OBJS:%.o=%.d)
 
 -include $(DEPS)
@@ -25,6 +25,9 @@ kern: $(OBJS) link.ld
 	$(LD) -Wl,-Tlink.ld -o $@ $(OBJS) -nostdlib -lgcc
 
 obj/head.o: src/head.s
+	$(AS) -f elf32 $< -o $@
+
+obj/swtch.o: src/swtch.s
 	$(AS) -f elf32 $< -o $@
 
 obj/%.o: src/%.c

@@ -7,6 +7,9 @@ global _start
 global keyboard_handler
 global uart_handler
 
+global stack_top
+global stack_bottom
+
 MB_MAGIC equ 0x1BADB002
 MB_FLAGS equ (1<<0)|(1<<1)
 MB_CHECKSUM equ (0 - (MB_MAGIC + MB_FLAGS))
