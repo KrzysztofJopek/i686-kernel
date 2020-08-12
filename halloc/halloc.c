@@ -1,5 +1,6 @@
 #include "halloc.h"
 #include "mm.h"
+#include "strutils.h"
 
 //BEGIN - HACKS TO MAKE KERNEL WORK
 #include "stdint.h"
@@ -26,16 +27,6 @@ static void assert(int x)
 {
 }
 
-static void memcpy(void* dst, void* src, size_t size)
-{
-	if(size <= 0)
-		return;
-	if(!dst || !src)
-		return;
-
-	while(size--)
-		*(uint8_t*)dst++ = *(uint8_t*)src++;
-}
 
 //END - HACKS TO MAKE KERNEL WORK
 

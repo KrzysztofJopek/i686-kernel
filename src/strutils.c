@@ -42,3 +42,13 @@ void strncpy(uint8_t* to, const uint8_t* from, uint32_t size)
 	while(--size && (*to++ = *from++)){}
 }
 
+void memcpy(void* dst, void* src, size_t size)
+{
+	if(size <= 0)
+		return;
+	if(!dst || !src)
+		return;
+
+	while(size--)
+		*(uint8_t*)dst++ = *(uint8_t*)src++;
+}
