@@ -1,29 +1,80 @@
 #include "mm.h"
 #include "log.h"
+#include <stddef.h>
+#include <stdint.h>
+
+//TODO pages are not cleared
 
 struct ram_region{
 	void* start;
 	void* end;
 };
+struct ram_frame{
+	uint32_t addr:20;
+	uint32_t used:1;
+	uint32_t _reserved:11;
+};
 
 #define MAX_RAM_REGIONS 8
 static struct ram_region ram_regions[MAX_RAM_REGIONS];
+#define MAX_RAM_FRAMES 10000
+static struct ram_frame ram_frames[MAX_RAM_FRAMES];
+static uint32_t curr_ram_frames = 0;
 /*
  * check if addr is in RAM region
  * return ram_region number starting from 1 if exist or 0 if doesn't exist
  */
-uint8_t get_ram_region(void* ptr)
+
+static struct ram_frame* find_free_frame()
 {
-	for(uint8_t i=0; i<MAX_RAM_REGIONS; i++){
-		if(ptr >= ram_regions[i].start && ptr <= ram_regions[i].end){
-			return i+1; // return number of region
+	for(uint32_t i=0; i<curr_ram_frames; i++){
+		if(!ram_frames[i].used){
+			return ram_frames+i;
 		}
+	}
+	return NULL;
+}
+
+static struct ram_frame* find_frame(uint32_t rpa)
+{
+	for(uint32_t i=0; i<curr_ram_frames; i++){
+		if(!ram_frames[i].addr == rpa){
+			return ram_frames+i;
+		}
+	}
+	return NULL;
+}
+
+uint32_t alloc_frame()
+{
+	struct ram_frame* rp;
+	if((rp = find_free_frame())){
+		rp->used = 1;
+		return rp->addr;
 	}
 	return 0;
 }
 
+void free_frame(uint32_t p)
+{
+	if(p & 0xfff){
+		LOG("ERROR: free_frame not a frame addr");
+		return;
+	}
+	struct ram_frame* rp = find_frame(p);
+	if(!rp){
+		LOG("ERROR: free_frame can't find frame");
+		return;
+	}
+	rp->used = 0;
+}
+
+
 /*
  * looping over memory maps provided by multiboot and add RAM to ram_regions array
+ XXX
+ TODO this function is awful, rewrite it
+ XXX
  */
 void setup_mem(multiboot_info_t* m_info)
 {
@@ -47,5 +98,22 @@ void setup_mem(multiboot_info_t* m_info)
 		mem_entry = (multiboot_memory_map_t*)((uint32_t)mem_entry + mem_entry->size + sizeof(mem_entry->size));
 	}
 
+#define KERN_START ((void*)0x100000)
+#define KERN_END   ((void*)0x200000)
+	for(uint8_t reg=0; reg<MAX_RAM_REGIONS; reg++){
+		void* ptr = ram_regions[reg].start;
+		while(ptr+4096 < ram_regions[reg].end){
+			if(ptr >= KERN_START && ptr < KERN_END){
+				continue;
+			}
+			ram_frames[curr_ram_frames++].addr = (uint32_t)ptr >> 12;
+			if(curr_ram_frames == MAX_RAM_FRAMES){
+				goto end;
+			}
+			ptr += 4096;
+		}
+	}
+end:
+	return;
 }
 

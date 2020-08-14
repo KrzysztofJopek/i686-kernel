@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 void setup_mem(multiboot_info_t* m_info);
-uint8_t get_ram_region(void* ptr);
+uint32_t alloc_frame();
+void free_frame(uint32_t p);
 
 #endif

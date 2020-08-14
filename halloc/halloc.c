@@ -1,5 +1,5 @@
 #include "halloc.h"
-#include "mm.h"
+#include "vm.h"
 #include "strutils.h"
 
 //BEGIN - HACKS TO MAKE KERNEL WORK
@@ -9,14 +9,11 @@
 #undef __DEBUG__
 #endif
 
-extern char end_mem[];
 static void* sbrk(uint32_t inc)
 {
 	static uint32_t size = 0;
-	uint8_t region_start = get_ram_region(end_mem+size);
-	uint8_t region_end   = get_ram_region(end_mem+size+inc);
-	if(region_start && region_start == region_end) {
-		void* prev = end_mem + size;
+	if(size + inc < KERN_HEAP_SIZE) {
+		void* prev = (void*)KERN_HEAP_ADDR + size;
 		size += inc;
 		return prev;
 	}
@@ -59,7 +56,6 @@ static void* getNextBlock(void* ptr);
 static void* getPreviousBlock(void* ptr);
 static size_t getFullSize(size_t size);
 static void mergeBlocks(void* pB1);
-
 
 void* halloc(size_t size)
 {
