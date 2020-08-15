@@ -1,10 +1,10 @@
 CC = i686-elf-gcc
 AS = nasm
-LD = i686-elf-ld
+LD = i686-elf-gcc
 INCFLAGS = -Iinc -Ihalloc
 
 CFLAGS = $(INCFLAGS) -m32 -Werror -Wextra -fno-stack-protector -Wno-builtin-declaration-mismatch -masm=intel \
-	 -ffreestanding	
+	 -ffreestanding	 
 OUTPUT_OPTION = -MMD -MP -o $@
 .DEFAULT_GOAL = kern
 GDB=cgdb
@@ -22,7 +22,7 @@ debug: CFLAGS += -ggdb -D_DEBUG_
 debug: kern
 
 kern: $(OBJS) link.ld
-	$(LD) -T link.ld -o $@ $(OBJS)
+	$(LD) -Wl,-Tlink.ld -o $@ $(OBJS) -nostdlib -lgcc
 
 obj/head.o: src/head.s
 	$(AS) -f elf32 $< -o $@

@@ -1,5 +1,5 @@
 #include "int.h"
-#include <stdint.h>
+#include "kerndefs.h"
 #include "port.h"
 #include "print.h"
 #include "kbd.h"

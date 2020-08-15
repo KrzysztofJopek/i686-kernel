@@ -1,9 +1,9 @@
 #include "halloc.h"
 #include "vm.h"
 #include "strutils.h"
+#include "kerndefs.h"
 
 //BEGIN - HACKS TO MAKE KERNEL WORK
-#include "stdint.h"
 //TODO use kernel log 
 #ifdef __DEBUG__
 #undef __DEBUG__

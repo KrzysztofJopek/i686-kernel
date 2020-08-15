@@ -1,5 +1,5 @@
 #include "vm.h"
-#include <stdint.h>
+#include "kerndefs.h"
 #include "log.h"
 #include "mm.h"
 
@@ -31,14 +31,19 @@ struct page_tab_ent{
 	uint32_t addr : 20;
 };
 
-static struct page_tab_ent kern_heap[KERN_HEAP_PAGES];
+static struct page_tab_ent* kern_heap;
 static void create_kern_heap_tab()
 {
+	kern_heap = (struct page_tab_ent*)(alloc_frame() << 12);
+	if(!kern_heap){
+		LOG_ERR("Can't kern_heap tab");
+		panic();
+	}
 	for(int i=0; i<KERN_HEAP_PAGES; i++){
 		uint32_t frame_addr = alloc_frame();
 		if(!frame_addr){
-			//TODO panic
-			LOG("Can't alloc heap");
+			LOG_ERR("Can't alloc heap");
+			panic();
 		}
 		kern_heap[i].addr = frame_addr;
 		kern_heap[i].P = 1;
@@ -46,11 +51,16 @@ static void create_kern_heap_tab()
 	}
 }
 
-static struct page_tab_ent kern_base[1024];
+static struct page_tab_ent* kern_base;
 static void create_kern_base_tab()
 {
+	kern_base = (struct page_tab_ent*)(alloc_frame() << 12);
+	if(!kern_base){
+		LOG_ERR("Can't kern_base tab");
+		panic();
+	}
 	for(int i=0; i<1024; i++){
-		kern_base[i].addr = (i*4096);
+		kern_base[i].addr = i;
 		kern_base[i].P = 1;
 		kern_base[i].R = 1;
 	}
@@ -58,13 +68,20 @@ static void create_kern_base_tab()
 
 #define KERN_START	0xC0000000
 #define KERN_POS	(KERN_START>>22)
-static struct page_dir_ent kern_pgdir[1024];
+static struct page_dir_ent* kern_pgdir;
 void setup_vm()
 {
 	create_kern_base_tab();
 	kern_pgdir[KERN_POS].addr = (uint32_t)kern_base >>12;
+	kern_pgdir[KERN_POS].P = 1;
+	kern_pgdir[KERN_POS].R = 1;
+	kern_pgdir[0].addr = (uint32_t)kern_base >>12;
+	kern_pgdir[0].P = 1;
+	kern_pgdir[0].R = 1;
 	create_kern_heap_tab();
 	kern_pgdir[KERN_POS+1].addr = (uint32_t)kern_heap >>12;
+	kern_pgdir[KERN_POS+1].P = 1;
+	kern_pgdir[KERN_POS+1].R = 1;
 	asm volatile (
 			"mov cr3, %0;"
 			:

@@ -17,11 +17,11 @@
 #define	COL_PINK	0xd
 #define	COL_YELLOW	0xe
 #define	COL_WHITE	0xf
-#include <stdint.h>
+#include "kerndefs.h"
 
 void clear();
 void print(const uint8_t* str);
 void putc(const uint8_t c);
-void log(const uint8_t* str);
+void log(char* fmt, ...);
 
 #endif

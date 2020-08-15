@@ -1,7 +1,7 @@
 #ifndef _PORT_H_
 #define _PORT_H_
 
-#include <stdint.h>
+#include "kerndefs.h"
 
 static inline uint8_t inb(uint16_t port)
 {

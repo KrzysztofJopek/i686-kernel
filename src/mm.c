@@ -1,7 +1,6 @@
 #include "mm.h"
 #include "log.h"
-#include <stddef.h>
-#include <stdint.h>
+#include "kerndefs.h"
 
 //TODO pages are not cleared
 
@@ -58,13 +57,13 @@ uint32_t alloc_frame()
 void free_frame(uint32_t p)
 {
 	if(p & 0xfff){
-		LOG("ERROR: free_frame not a frame addr");
-		return;
+		LOG_ERR("free_frame not a frame addr");
+		panic();
 	}
 	struct ram_frame* rp = find_frame(p);
 	if(!rp){
-		LOG("ERROR: free_frame can't find frame");
-		return;
+		LOG_ERR("free_frame can't find frame");
+		panic();
 	}
 	rp->used = 0;
 }
@@ -85,15 +84,15 @@ void setup_mem(multiboot_info_t* m_info)
 			if(num_ram < MAX_RAM_REGIONS){
 				ram_regions[num_ram].start = (void*)((uint32_t)mem_entry->addr);
 				ram_regions[num_ram].end = (void*)((uint32_t)mem_entry->addr + (uint32_t)mem_entry->len - 1);
-				LOG("found usable RAM\n");
+				LOG_DBG("found usable RAM");
 			}
 			else{
-				LOG("WARNING: found usable RAM, but MAX_RAM_REGIONS is too small\n");
+				LOG_WRN("found usable RAM, but MAX_RAM_REGIONS is too small");
 			}
 			num_ram++;
 		}
 		else{
-			LOG("found not usable memory\n");
+			LOG_DBG("found not usable memory");
 		}
 		mem_entry = (multiboot_memory_map_t*)((uint32_t)mem_entry + mem_entry->size + sizeof(mem_entry->size));
 	}
@@ -103,7 +102,8 @@ void setup_mem(multiboot_info_t* m_info)
 	for(uint8_t reg=0; reg<MAX_RAM_REGIONS; reg++){
 		void* ptr = ram_regions[reg].start;
 		while(ptr+4096 < ram_regions[reg].end){
-			if(ptr >= KERN_START && ptr < KERN_END){
+			if(ptr >= KERN_START && ptr < KERN_END || ptr == NULL){
+				ptr += 4096;
 				continue;
 			}
 			ram_frames[curr_ram_frames++].addr = (uint32_t)ptr >> 12;

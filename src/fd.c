@@ -1,6 +1,5 @@
 #include "fd.h"
 //todo add global NULL macro
-#define NULL (void*)0;
 
 //TODO handle error codes
 struct fd{

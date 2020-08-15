@@ -71,12 +71,48 @@ void clear()
 	vid_pos = 0;
 }
 
-void log(const uint8_t* str)
+#define MAX_INT_SIZE 30
+void log(char* fmt, ...)
 {
 	static int32_t fd = -1;
 	if(fd == -1){
 		fd = open("C1");
 	}
 
-	write(fd, (void*)str, strlen(str));
+	if(!fmt){
+		//log("log(NULL)");
+		panic();
+	}
+
+	char buff[MAX_INT_SIZE];
+	uint32_t res;
+	char* str;
+	uint32_t* argp = (uint32_t*)(void*)(&fmt+1);
+	while(*fmt){
+		if(*fmt != '%'){
+			write(fd, (void*)fmt, 1);
+			fmt++;
+			continue;
+		}
+		fmt++;
+		switch(*fmt){
+			case 'd':
+				res = itostr(*argp++, buff, 10);
+				write(fd, buff, res-1);
+				break;
+			case 's':
+				str = (char*)*argp++;
+				if(!str){
+					write(fd, "(null)", sizeof("null")-1);
+				}
+				else{
+					write(fd, str, strlen(str)-1);
+				}
+				break;
+			default:
+				write(fd, "(unknown)", sizeof("unknown")-1);
+				break;
+		}
+		fmt++;
+	}
 }
