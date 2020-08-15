@@ -5,7 +5,7 @@
 
 #define MAX_W 80
 #define MAX_H 25
-#define VIDEO_MEM 0xb8000
+#define VIDEO_MEM (0xC0000000 + 0xb8000)
 #define VIDEO_MEM_SIZE (MAX_W*MAX_H)
 
 

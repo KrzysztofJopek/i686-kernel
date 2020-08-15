@@ -17,8 +17,9 @@ void kmain(multiboot_info_t* m_info)
 	setup_fd();
 	LOG("INT and FD init done");
 	setup_mem(m_info);
+	LOG("MM init done");
 	setup_vm();
-	LOG("MM and VM init done");
+	LOG("VM init done");
 	char* xd = halloc(5);
 	while(1);
 }

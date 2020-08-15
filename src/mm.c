@@ -19,10 +19,6 @@ static struct ram_region ram_regions[MAX_RAM_REGIONS];
 #define MAX_RAM_FRAMES 10000
 static struct ram_frame ram_frames[MAX_RAM_FRAMES];
 static uint32_t curr_ram_frames = 0;
-/*
- * check if addr is in RAM region
- * return ram_region number starting from 1 if exist or 0 if doesn't exist
- */
 
 static struct ram_frame* find_free_frame()
 {
@@ -97,12 +93,12 @@ void setup_mem(multiboot_info_t* m_info)
 		mem_entry = (multiboot_memory_map_t*)((uint32_t)mem_entry + mem_entry->size + sizeof(mem_entry->size));
 	}
 
-#define KERN_START ((void*)0x100000)
-#define KERN_END   ((void*)0x200000)
+#define KERN_END	((void*)0x400000)
+#define KERN_END_PAGES	(KERN_END - 4096*2) // Two last pages of kernel spaces are used kern_base and kern_heap in VM
 	for(uint8_t reg=0; reg<MAX_RAM_REGIONS; reg++){
 		void* ptr = ram_regions[reg].start;
 		while(ptr+4096 < ram_regions[reg].end){
-			if(ptr >= KERN_START && ptr < KERN_END || ptr == NULL){
+			if(ptr < KERN_END_PAGES){
 				ptr += 4096;
 				continue;
 			}

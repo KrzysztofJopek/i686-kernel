@@ -75,9 +75,6 @@ void setup_vm()
 	kern_pgdir[KERN_POS].addr = (uint32_t)kern_base >>12;
 	kern_pgdir[KERN_POS].P = 1;
 	kern_pgdir[KERN_POS].R = 1;
-	kern_pgdir[0].addr = (uint32_t)kern_base >>12;
-	kern_pgdir[0].P = 1;
-	kern_pgdir[0].R = 1;
 	create_kern_heap_tab();
 	kern_pgdir[KERN_POS+1].addr = (uint32_t)kern_heap >>12;
 	kern_pgdir[KERN_POS+1].P = 1;
