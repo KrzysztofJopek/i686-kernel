@@ -138,6 +138,11 @@ void free_page(void* addr)
 	free_frame(A2F(addr));
 }
 
+/*
+ * Copy kernel space to user process,
+ * setup one tab of pages starting at 0x0;
+ * TODO - 0x0 page should generate SEGINT
+ */
 void setup_user(void* pgdir)
 {
 	memcpy(pgdir, kern_pgdir, PAGE_SIZE);

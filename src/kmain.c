@@ -21,7 +21,6 @@ void kmain(multiboot_info_t* m_info)
 	LOG("MM init done");
 	setup_vm();
 	LOG("VM init done");
-	char* xd = halloc(5);
 	scheduler();
 	while(1);
 }

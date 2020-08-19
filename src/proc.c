@@ -53,6 +53,7 @@ struct proc{
 	void* kstack;
 	uint8_t start;
 	uint8_t used;
+	uint32_t pid;
 };
 
 
@@ -75,6 +76,9 @@ void swtch(struct context** old, struct context* new);
 void setup_ctx(struct context* ctx);
 void trapret();
 
+/*
+ * First executed function on new process, returns to trapret
+ */
 void forkret()
 {
 	return;
@@ -88,7 +92,7 @@ static int32_t create_process()
 		return -1;
 	}
 	procs[pid].used = 1;
-	void* frame = halloc(4096);
+	void* frame = halloc(PAGE_SIZE);
 	if(frame == 0){
 		LOG_WRN("oom");
 		return -1;
@@ -108,7 +112,9 @@ static int32_t create_process()
 
 void init_start();
 void init_end();
-
+/*
+ * Starts first user process
+ */
 static void setup_init_proc()
 {
 	uint32_t pid = create_process();
@@ -122,9 +128,10 @@ static void setup_init_proc()
 	procs[pid].tf->es = 0x23;
 	procs[pid].tf->ss = 0x23;
 	procs[pid].tf->eflags = 0x00000200;
-	procs[pid].tf->esp = 4096;
+	procs[pid].tf->esp = PAGE_SIZE;
 	procs[pid].tf->eip = 0x10;
 	procs[pid].start = 1;
+	procs[pid].pid = pid;
 	setup_code(procs[pid].pgdir, (void*)init_start, init_end-init_start);
 }
 
@@ -229,7 +236,7 @@ void scheduler()
 	set_tss();
 	sched_proc.ctx = halloc(sizeof(struct context));
 	if(!sched_proc.ctx){
-		LOG("ERROR, cant allocate sched context");
+		LOG_ERR("Cant allocate sched context");
 	}
 	setup_init_proc();
 
@@ -255,7 +262,7 @@ void sched()
 
 void trap(struct trapframe *tf)
 {
-	LOG("SYSCALL %d", tf->trapno);
+	LOG("Syscall %d, pid:%d", tf->eax, currproc->pid);
 	sched();
 	return;
 }

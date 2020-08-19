@@ -32,8 +32,9 @@ trapent:
 global init_start
 global init_end
 init_start:
-	mov eax, 1
+	mov eax, 0
+	init_loop:
+	inc eax
 	int 0x80
-	jmp init_start
+	jmp init_loop
 init_end:
-	nop
