@@ -72,12 +72,8 @@ static int32_t find_free_proc()
 }
 
 void swtch(struct context** old, struct context* new);
-void swtch2(struct context* old, struct context* new);
 void setup_ctx(struct context* ctx);
 void trapret();
-
-void print_a();
-void print_b();
 
 void forkret()
 {
@@ -98,7 +94,7 @@ static int32_t create_process()
 		return -1;
 	}
 	procs[pid].kstack = frame;
-	void* sp = procs[pid].kstack + 4096;
+	void* sp = procs[pid].kstack + PAGE_SIZE;
 	sp -= sizeof(struct trapframe);
 	procs[pid].tf = (struct trapframe*)sp;
 	sp -= 4;
@@ -113,7 +109,7 @@ static int32_t create_process()
 void init_start();
 void init_end();
 
-static void setup_2_procs_test()
+static void setup_init_proc()
 {
 	uint32_t pid = create_process();
 	void* pp = alloc_page();
@@ -235,7 +231,7 @@ void scheduler()
 	if(!sched_proc.ctx){
 		LOG("ERROR, cant allocate sched context");
 	}
-	setup_2_procs_test();
+	setup_init_proc();
 
 	for(;;){
 		for(int p = 0; p<MAX_PROC; p++){
@@ -243,7 +239,7 @@ void scheduler()
 				continue;
 			}
 			currproc = procs+p;
-			tss_entry.esp0 = (uint32_t)(procs[p].kstack + 4096);
+			tss_entry.esp0 = (uint32_t)(procs[p].kstack + PAGE_SIZE);
 			set_upgdir(procs[p].pgdir);
 			swtch(&sched_proc.ctx, procs[p].ctx);
 			set_kpgdir();
