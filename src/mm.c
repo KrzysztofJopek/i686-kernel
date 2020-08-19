@@ -1,6 +1,7 @@
 #include "mm.h"
 #include "log.h"
 #include "kerndefs.h"
+#include "vm.h"
 
 //TODO pages are not cleared
 
@@ -11,8 +12,7 @@ struct ram_region{
 struct ram_frame{
 	uint32_t addr:20;
 	uint32_t used:1;
-	uint32_t _reserved:11;
-};
+	uint32_t _reserved:11; };
 
 #define MAX_RAM_REGIONS 8
 static struct ram_region ram_regions[MAX_RAM_REGIONS];
@@ -93,20 +93,20 @@ void setup_mem(multiboot_info_t* m_info)
 		mem_entry = (multiboot_memory_map_t*)((uint32_t)mem_entry + mem_entry->size + sizeof(mem_entry->size));
 	}
 
-#define KERN_END	((void*)0x400000)
-#define KERN_END_PAGES	(KERN_END - 4096*2) // Two last pages of kernel spaces are used kern_base and kern_heap in VM
+#define PHY_KERN_END		((void*)0x400000)
+#define PHY_KERN_END_PAGES	(PHY_KERN_END - PAGE_SIZE*4) // 4 pages for kern_pgdir, kern_base, kern_heap, res_page in vm.c
 	for(uint8_t reg=0; reg<MAX_RAM_REGIONS; reg++){
 		void* ptr = ram_regions[reg].start;
 		while(ptr+4096 < ram_regions[reg].end){
-			if(ptr < KERN_END_PAGES){
-				ptr += 4096;
+			if(ptr < PHY_KERN_END_PAGES){
+				ptr += PAGE_SIZE;
 				continue;
 			}
-			ram_frames[curr_ram_frames++].addr = (uint32_t)ptr >> 12;
+			ram_frames[curr_ram_frames++].addr = A2F(ptr);
 			if(curr_ram_frames == MAX_RAM_FRAMES){
 				goto end;
 			}
-			ptr += 4096;
+			ptr += PAGE_SIZE;
 		}
 	}
 end:

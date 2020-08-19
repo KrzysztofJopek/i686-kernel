@@ -2,10 +2,15 @@ bits 32
 extern kmain
 extern keyboard_handler_main
 extern uart_handler_main
+extern trapent
 
 global _start
 global keyboard_handler
 global uart_handler
+global syscall_handler
+
+global stack_top
+global stack_bottom
 
 MB_MAGIC equ 0x1BADB002
 MB_FLAGS equ (1<<0)|(1<<1)
@@ -21,6 +26,7 @@ PG_KERN 	equ 0xC0000000
 PG_KERN_POS 	equ (PG_KERN >> 22)
 section .bss
 	align 4096
+	resb 4096
 	stack_bottom:
 	resb 8192
 	stack_top:
@@ -37,11 +43,6 @@ section .multiboot.text
 	_start:
 		cli ; disable interrupts
 		mov edx, ebx
-
-		;clear segments
-		xor ax, ax
-		mov ds, ax
-		mov es, ax
 
 		;setup pgdir
 		mov eax, (pgtab - PG_KERN)
@@ -86,20 +87,6 @@ section .text
 
 		;enable a20
 		;not used -- multiboot
-	enable_a20:
-		set_20.1:
-		in al, 0x64
-		test al, 0x2
-		jnz set_20.1
-		mov al, 0xd1
-		out 0x64, al
-
-		set_20.2:
-		in al, 0x64
-		test al, 0x2
-		jnz set_20.2
-		mov al, 0xdf
-		out 0x60, al
 
 	set_gdt:
 		lgdt [gdtdesc]
@@ -128,6 +115,12 @@ section .text
 		call    uart_handler_main
 		iretd
 
+	syscall_handler:
+		push 0x01
+		push 0x80
+		jmp trapent
+		hlt;should return here
+
 
 
 gdt:
@@ -147,6 +140,23 @@ gdt:
 	db 0x92
 	db 11001111b
 	db 0
+	gdt_ucode:
+	dw 0xffff
+	dw 0
+	db 0
+	db 0xfa
+	db 11001111b
+	db 0
+	gdt_udata:
+	dw 0xffff
+	dw 0
+	db 0
+	db 0xf2
+	db 11001111b
+	db 0
+global gdt_tss
+	gdt_tss:
+	dq 0 
 
 gdtdesc:
 	dw (gdtdesc - gdt - 1)

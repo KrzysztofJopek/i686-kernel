@@ -5,3 +5,4 @@ kern
 obj/
 *.d
 *.o
+kern.iso

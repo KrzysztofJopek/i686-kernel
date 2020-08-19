@@ -5,6 +5,7 @@
 #include "mm.h"
 #include "vm.h"
 #include "halloc.h"
+#include "proc.h"
 
 void kmain(multiboot_info_t* m_info)
 {
@@ -21,5 +22,6 @@ void kmain(multiboot_info_t* m_info)
 	setup_vm();
 	LOG("VM init done");
 	char* xd = halloc(5);
+	scheduler();
 	while(1);
 }

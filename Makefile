@@ -10,7 +10,7 @@ OUTPUT_OPTION = -MMD -MP -o $@
 GDB=cgdb
 
 SRCS = $(wildcard src/*.c)
-OBJS = $(addprefix obj/,$(notdir $(SRCS:%.c=%.o))) obj/head.o halloc/halloc.o
+OBJS = $(addprefix obj/,$(notdir $(SRCS:%.c=%.o))) obj/head.o obj/swtch.o halloc/halloc.o obj/trap.o obj/exc.o
 DEPS = $(OBJS:%.o=%.d)
 
 -include $(DEPS)
@@ -27,11 +27,26 @@ kern: $(OBJS) link.ld
 obj/head.o: src/head.s
 	$(AS) -f elf32 $< -o $@
 
+obj/swtch.o: src/swtch.s
+	$(AS) -f elf32 $< -o $@
+
+obj/trap.o: src/trap.s
+	$(AS) -f elf32 $< -o $@
+
+obj/exc.o: src/exc.s
+	$(AS) -f elf32 $< -o $@
+
 obj/%.o: src/%.c
 	$(CC) -c $(CFLAGS) $(OUTPUT_OPTION) $<
 
 halloc/halloc.o: halloc/halloc.c halloc/halloc.h
 	$(MAKE) -C halloc halloc.o
+
+bochs: debug
+	cp kern bochs/isodir/boot/kern
+	cd bochs && grub-mkrescue -o kern.iso isodir/ && bochs
+
+
 #-------
 
 .PHONY: tags clean clean_tags run gdb
