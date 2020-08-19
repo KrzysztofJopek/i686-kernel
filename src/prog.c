@@ -3,7 +3,7 @@
 
 void yield()
 {
-	sched();
+	asm("int 0x80");
 }
 
 void print_a()

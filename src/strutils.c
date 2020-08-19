@@ -53,6 +53,17 @@ void memcpy(void* dst, void* src, size_t size)
 		*(uint8_t*)dst++ = *(uint8_t*)src++;
 }
 
+void memset(void* dst, uint8_t byte, size_t size)
+{
+	if(size <= 0)
+		return;
+	if(!dst)
+		return;
+
+	while(size--)
+		*(uint8_t*)dst++ = byte;
+}
+
 uint32_t itostr(int64_t it, char* res, uint32_t base)
 {
 	if(base < 1 || base > 16){

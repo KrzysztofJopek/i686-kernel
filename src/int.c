@@ -4,6 +4,7 @@
 #include "print.h"
 #include "kbd.h"
 #include "uart.h"
+#include "exc.h"
 
 #define IDT_SIZE 256
 #define PIC1_CMD 0x20
@@ -15,6 +16,7 @@
 extern void load_idt(void* idt_ptr);
 extern void keyboard_handler(void);
 extern void uart_handler(void);
+extern void syscall_handler(void);
 
 struct IDT_entry{
 	uint16_t offset_low;
@@ -49,21 +51,34 @@ static void setup_pic()
 	outb(0xff , PIC2_DATA);
 }
 
-static void setup_entry(void* addr, uint8_t pos)
+static void setup_entry_gate(void* addr, uint8_t pos, uint8_t priv)
 {
 	uint32_t u_addr = (uint32_t)addr; 
 	IDT[pos].offset_low = u_addr & 0xffff;
 	IDT[pos].selector = 0x08;
 	IDT[pos].zero = 0;
-	IDT[pos].type = 0x8e;
+	IDT[pos].type = 0x8e | priv << 5;
+	IDT[pos].offset_high = (u_addr & 0xffff0000) >> 16;
+}
+
+static void setup_entry_trap(void* addr, uint8_t pos, uint8_t priv)
+{
+	uint32_t u_addr = (uint32_t)addr; 
+	IDT[pos].offset_low = u_addr & 0xffff;
+	IDT[pos].selector = 0x08;
+	IDT[pos].zero = 0;
+	IDT[pos].type = 0x8f | priv << 5;
 	IDT[pos].offset_high = (u_addr & 0xffff0000) >> 16;
 }
 
 void setup_int()
 {
-
-	setup_entry(keyboard_handler, 0x21);
-	setup_entry(uart_handler, 0x24);
+	setup_entry_gate(keyboard_handler, 0x21, 0);
+	setup_entry_gate(uart_handler, 0x24, 0);
+	setup_entry_trap(syscall_handler, 0x80, 3);
+	for(int i=0; i<32; i++){
+		setup_entry_gate((void*)tab[i], i, 3);
+	}
 	setup_uart(COM1_PORT);
 	setup_pic();
 	struct{
