@@ -33,7 +33,7 @@ global init_start
 global init_end
 init_start:
 	;open
-	mov eax, 0
+	mov eax, 2
 	mov ebx, path
 	int 0x80
 	mov ebx, eax
