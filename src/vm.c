@@ -183,3 +183,24 @@ void set_upgdir(void* pgdir)
 {
 	set_cr3(V2P(pgdir));
 }
+
+//pg contains kernel space
+void copy_from_user(void* to, void* from, unsigned len)
+{
+	void* pg = currproc->pgdir;
+	set_cr3(V2P(pg));
+
+	memcpy(to, from, len);
+
+	set_cr3(V2P(kern_pgdir));
+}
+
+void copy_to_user(void* to, void* from, unsigned len)
+{
+	void* pg = currproc->pgdir;
+	set_cr3(V2P(pg));
+
+	memcpy(to, from, len);
+
+	set_cr3(V2P(kern_pgdir));
+}

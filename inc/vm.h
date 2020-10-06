@@ -23,4 +23,7 @@ void* vtop(void* vaddr);
 void set_upgdir(void* pgdir);
 void set_kpgdir();
 
+void copy_from_user(void* to, void* from, unsigned len);
+void copy_to_user(void* to, void* from, unsigned len);
+
 #endif

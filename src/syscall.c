@@ -2,7 +2,7 @@
 #include "log.h"
 
 #define MAX_SYSCALL 20
-#define MAX_ARGS 2
+#define MAX_ARGS 3
 struct syscall_entry{
 	void* syscall;
 	uint8_t args;
@@ -15,7 +15,7 @@ int32_t add_syscall(uint32_t pos, void* syscall, uint8_t args)
 		LOG_ERR("Trying to add syscall %d, MAX_SYSCALL:%d", pos, MAX_SYSCALL);
 		return -1;
 	}
-	if(syscall_tab[pos].syscall == NULL){
+	if(syscall_tab[pos].syscall != NULL){
 		LOG_ERR("Syscal %d already defined", pos);
 		return -2;
 	}
@@ -62,6 +62,8 @@ uint32_t call_syscall(struct trapframe* tf)
 			return ((int32_t(*)(int32_t))syscall_tab[pos].syscall)(tf->ebx);
 		case 2:
 			return ((int32_t(*)(int32_t, int32_t))syscall_tab[pos].syscall)(tf->ebx, tf->ecx);
+		case 3:
+			return ((int32_t(*)(int32_t, int32_t, int32_t))syscall_tab[pos].syscall)(tf->ebx, tf->ecx, tf->edx);
 		default:
 			LOG_ERR("Trying to call syscall for args count:%d",syscall_tab[pos].args);
 			panic();

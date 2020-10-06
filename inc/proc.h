@@ -35,4 +35,15 @@ struct trapframe{
 	uint16_t padding6;
 };
 
+struct proc{
+	uint32_t size;
+	void* pgdir;
+	struct context* ctx;
+	struct trapframe* tf;
+	void* kstack;
+	uint8_t start;
+	uint8_t used;
+	uint32_t pid;
+};
+
 #endif

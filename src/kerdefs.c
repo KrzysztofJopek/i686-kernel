@@ -1,4 +1,5 @@
 #include "kerndefs.h"
+#include "proc.h"
 
 void panic()
 {
@@ -6,3 +7,5 @@ void panic()
 		asm volatile ("hlt;");
 	}
 }
+
+struct proc* currproc;

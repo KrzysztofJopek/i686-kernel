@@ -15,22 +15,10 @@ struct context{
 	uint32_t eip;
 };
 
-struct proc{
-	uint32_t size;
-	void* pgdir;
-	struct context* ctx;
-	struct trapframe* tf;
-	void* kstack;
-	uint8_t start;
-	uint8_t used;
-	uint32_t pid;
-};
-
 
 #define MAX_PROC 10
 static struct proc procs[MAX_PROC];
 static struct proc sched_proc;
-static struct proc* currproc;
 
 static int32_t find_free_proc()
 {
@@ -209,6 +197,7 @@ void scheduler()
 		LOG_ERR("Cant allocate sched context");
 	}
 	setup_init_proc();
+	setup_init_proc();
 
 	for(;;){
 		for(int p = 0; p<MAX_PROC; p++){
@@ -233,7 +222,7 @@ void sched()
 void trap(struct trapframe *tf)
 {
 	LOG("Syscall %d, pid:%d", tf->eax, currproc->pid);
-	call_syscall(tf);
+	tf->eax = call_syscall(tf);
 	sched();
 	return;
 }
