@@ -48,15 +48,19 @@ static void fds_del(struct fd* global_fd)
 	global_fd->fops = NULL;
 }
 
-static int32_t sys_open(uint32_t path);
+static int32_t sys_read(int32_t fd, int32_t buff, int32_t size);
 static int32_t sys_write(int32_t fd, int32_t buff, int32_t size);
+static int32_t sys_open(int32_t path);
+static int32_t sys_close(int32_t fd);
 void setup_fd()
 {
 	for(int i=0; i<MAX_FD; i++){
 		fds[i].fd = -1;
 	}
-	add_syscall(0, sys_open, 1);
+	add_syscall(0, sys_read, 3);
 	add_syscall(1, sys_write, 3);
+	add_syscall(2, sys_open, 1);
+	add_syscall(3, sys_close, 1);
 }
 
 int32_t open(uint8_t* path)
@@ -112,7 +116,7 @@ int32_t close(int32_t fd)
 }
 
 
-static int32_t sys_open(uint32_t path)
+static int32_t sys_open(int32_t path)
 {
 	return open((void*)path);
 }
@@ -125,7 +129,25 @@ static int32_t sys_write(int32_t fd, int32_t buff, int32_t size)
 		panic();
 	}
 	copy_from_user(mem, (void*)buff, size);
-	int32_t res = write(fd, (void*)buff, size);
+	int32_t res = write(fd, mem, size);
 	hfree(mem);
 	return res;
+}
+
+static int32_t sys_read(int32_t fd, int32_t buff, int32_t size)
+{
+	void* mem = halloc(size);
+	if(!mem){
+		LOG_ERR("Can't kalloc mem %d", size);
+		panic();
+	}
+	int32_t res = read(fd, mem, size);
+	copy_to_user((void*)buff, mem, size);
+	hfree(mem);
+	return res;
+}
+
+static int32_t sys_close(int32_t fd)
+{
+	return close(fd);
 }
