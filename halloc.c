@@ -45,7 +45,7 @@ void* halloc(size_t size)
 		size++;
 	void* ptr = NULL;
 	if(firstBlock != NULL){
-		ptr = findFree(getFullSize(size));
+		ptr = findFree(size);
 		if(ptr != NULL){
 			if(((beginStruct*)ptr)->size >= getFullSize(SMALLESTBLOCK))
 				splitBlock(ptr, size);
