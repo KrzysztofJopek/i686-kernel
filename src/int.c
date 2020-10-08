@@ -5,6 +5,8 @@
 #include "kbd.h"
 #include "uart.h"
 #include "exc.h"
+#include "vm.h"
+#include "proc.h"
 
 #define IDT_SIZE 256
 #define PIC1_CMD 0x20
@@ -73,8 +75,8 @@ static void setup_entry_trap(void* addr, uint8_t pos, uint8_t priv)
 
 void setup_int()
 {
-	setup_entry_gate(keyboard_handler, 0x21, 0);
-	setup_entry_gate(uart_handler, 0x24, 0);
+	setup_entry_trap(keyboard_handler, 0x21, 0);
+	setup_entry_trap(uart_handler, 0x24, 0);
 	setup_entry_trap(syscall_handler, 0x80, 3);
 	for(int i=0; i<32; i++){
 		setup_entry_gate((void*)tab[i], i, 3);

@@ -231,10 +231,20 @@ void sched()
 	swtch(&currproc->ctx, sched_proc.ctx);
 }
 
+void keyboard_handler_main();
+void uart_handler_main();
 void trap(struct trapframe *tf)
 {
-	LOG("Syscall %d, pid:%d", tf->eax, currproc->pid);
-	tf->eax = call_syscall(tf);
+	if(tf->trapno == 0x21){
+		keyboard_handler_main();
+	}
+	else if(tf->trapno == 0x24){
+		uart_handler_main();
+	}
+	else if(tf->trapno == 0x80){
+		LOG("Syscall %d, pid:%d", tf->eax, currproc->pid);
+		tf->eax = call_syscall(tf);
+	}
 	sched();
 	return;
 }

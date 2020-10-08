@@ -2,6 +2,7 @@
 #include "uart.h"
 #include "fd.h"
 #include "strutils.h"
+#include "log.h"
 
 #define MAX_W 80
 #define MAX_H 25
