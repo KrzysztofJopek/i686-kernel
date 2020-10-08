@@ -53,7 +53,7 @@ init_start:
 	mov eax, 0
 	busy_loop:
 	inc eax
-	cmp eax, 100000000
+	cmp eax, 1000000000
 	jne busy_loop
 	jmp init_loop
 	buff: db "Hello", 10, 0

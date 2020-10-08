@@ -128,15 +128,19 @@ section .text
 		ret
 
 	keyboard_handler:
-		call    keyboard_handler_main
-		iretd
+		push 0x0
+		push 0x21
+		jmp trapent
+		hlt;should return here
 
 	uart_handler:
-		call    uart_handler_main
-		iretd
+		push 0x0
+		push 0x24
+		jmp trapent
+		hlt;should return here
 
 	syscall_handler:
-		push 0x01
+		push 0x0
 		push 0x80
 		jmp trapent
 		hlt;should return here
