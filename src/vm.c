@@ -194,9 +194,8 @@ void copy_from_user(void* to, void* from, unsigned len)
 void copy_to_user(void* to, void* from, unsigned len)
 {
 	void* pg = currproc->pgdir;
-	set_cr3(V2P(pg));
-
-	memcpy(to, from, len);
-
-	set_cr3(V2P(kern_pgdir));
+	uint32_t to_num = (uint32_t)to;
+	map_by_pgdir_addr((void*)(to_num & ~(PAGE_SIZE-1)), pg, (TEMP_POS));
+	
+	memcpy((TEMP_POS+(to_num%4096)), from, len);
 }
