@@ -32,16 +32,22 @@ trapent:
 global init_start
 global init_end
 init_start:
+	;fork
+	mov eax, 5
+	int 0x80
+	mov ecx, buff
+	cmp eax, 0
+	jnz open
+	mov ecx, buff2
 	;open
+	open:
 	mov eax, 2
 	mov ebx, path
 	int 0x80
 	mov ebx, eax
-
 	;write
 	init_loop:
 	mov eax, 1
-	mov ecx, buff
 	mov edx, 7
 	int 0x80
 	mov eax, 0
@@ -51,5 +57,6 @@ init_start:
 	jne busy_loop
 	jmp init_loop
 	buff: db "Hello", 10, 0
+	buff2: db "Child", 10, 0
 	path: db "C1", 0
 init_end:
