@@ -1,4 +1,4 @@
-# i386-kernel
+# i686-kernel
 Use
 ```make && make run```
 or
