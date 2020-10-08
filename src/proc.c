@@ -68,17 +68,13 @@ static int32_t create_process()
 	return pid;
 }
 
-void init_start();
-void init_end();
 /*
  * Starts first user process
  */
 static void setup_init_proc()
 {
 	uint32_t pid = create_process();
-	void* pp = alloc_page();
-	procs[pid].pgdir = pp;
-	setup_user(procs[pid].pgdir);
+	procs[pid].pgdir = setup_user();
 	memset(procs[pid].tf, 0, sizeof(struct trapframe));
 
 	procs[pid].tf->cs = 0x1B;
@@ -90,7 +86,6 @@ static void setup_init_proc()
 	procs[pid].tf->eip = 0x10;
 	procs[pid].start = 1;
 	procs[pid].pid = pid;
-	setup_code(procs[pid].pgdir, (void*)init_start, init_end-init_start);
 }
 
 //from osdev.org

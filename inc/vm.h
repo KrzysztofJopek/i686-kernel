@@ -15,13 +15,14 @@
 #define P2V(x) ((void*)(x + KERN_ADDR))
 
 void setup_vm();
-void setup_user(void* pgdir);
+void* setup_user();
 void setup_code(void* pgdir, void* code, size_t size);
 void* alloc_page();
 void free_page(void* addr);
 void* vtop(void* vaddr);
 void set_upgdir(void* pgdir);
 void set_kpgdir();
+void map_frame(uint32_t frame, void* addr);
 
 void copy_from_user(void* to, void* from, unsigned len);
 void copy_to_user(void* to, void* from, unsigned len);
