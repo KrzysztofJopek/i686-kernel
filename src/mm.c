@@ -94,7 +94,7 @@ void setup_mem(multiboot_info_t* m_info)
 	}
 
 #define PHY_KERN_END		((void*)0x400000)
-#define PHY_KERN_END_PAGES	(PHY_KERN_END - PAGE_SIZE*4) // 4 pages for kern_pgdir, kern_base, kern_heap, res_page in vm.c
+#define PHY_KERN_END_PAGES	(PHY_KERN_END) 
 	for(uint8_t reg=0; reg<MAX_RAM_REGIONS; reg++){
 		void* ptr = ram_regions[reg].start;
 		while(ptr+4096 < ram_regions[reg].end){

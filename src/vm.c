@@ -40,61 +40,69 @@ static void set_cr3(void* addr)
 		     );
 }
 
-static struct page_tab_ent* kern_heap;
-static void create_kern_heap_tab()
+static struct page_dir_ent* kern_pgdir;
+struct page_tab_ent* get_kern_page_tab(uint32_t index)
 {
-	kern_heap = (struct page_tab_ent*)(P2V(F2A(alloc_frame())));
-	if(!kern_heap){
-		LOG_ERR("Can't kern_heap tab");
+	struct page_tab_ent* self_tab = ((struct page_tab_ent*)0xFFC00000) + (0x400 * 1023);
+	struct page_tab_ent* dest_tab = ((struct page_tab_ent*)0xFFC00000) + (0x400 * index);
+	//create tab if does not exist
+	if(self_tab[index].P == 0){
+		uint32_t page_tab_frame = alloc_frame();
+		if(!page_tab_frame){
+			LOG_ERR("oom");
+			panic();
+		}
+		self_tab[index].addr = page_tab_frame;
+		self_tab[index].P = 1;
+		self_tab[index].R = 1;
+		kern_pgdir[index].addr = page_tab_frame;
+		kern_pgdir[index].P = 1;
+		kern_pgdir[index].R = 1;
+		set_kpgdir();
+		memset(dest_tab, 0, sizeof(PAGE_SIZE));
+	}
+	return dest_tab;
+}
+
+//frame is 20bit frame position returned from alloc_frame()
+//addr need to me page aligned
+void map_frame(uint32_t frame, void* addr)
+{
+	uint32_t addr_num = (uint32_t)addr;
+	if(addr_num % PAGE_SIZE){
+		LOG_ERR("address not page aligned %d\n", addr_num);
 		panic();
 	}
+
+	uint32_t pd = addr_num >> 22;
+	uint32_t pt = (addr_num >> 12) & 0x03FF;
+
+	struct page_tab_ent* page_tab = get_kern_page_tab(pd);
+	page_tab[pt].addr = frame;
+	page_tab[pt].P = 1;
+	page_tab[pt].R = 1;
+	set_kpgdir();
+}
+
+static void create_kern_heap_tab()
+{
 	for(int i=0; i<KERN_HEAP_PAGES; i++){
 		uint32_t frame_addr = alloc_frame();
 		if(!frame_addr){
 			LOG_ERR("Can't alloc heap");
 			panic();
 		}
-		kern_heap[i].addr = frame_addr;
-		kern_heap[i].P = 1;
-		kern_heap[i].R = 1;
+		map_frame(frame_addr, (void*)(KERN_HEAP_ADDR + PAGE_SIZE*i));
 	}
 }
-
-static struct page_tab_ent* kern_base;
-static void create_kern_base_tab()
-{
-	kern_base = (struct page_tab_ent*)(P2V(F2A(alloc_frame())));
-	if(!kern_base){
-		LOG_ERR("Can't kern_base tab");
-		panic();
-	}
-	for(int i=0; i<PAGE_ENTRY; i++){
-		kern_base[i].addr = i;
-		kern_base[i].P = 1;
-		kern_base[i].R = 1;
-	}
-}
-
 
 static struct page_dir_ent* res_page;
 #define KERN_POS (KERN_ADDR >> 22)
-static struct page_dir_ent* kern_pgdir;
 void setup_vm()
 {
-	kern_pgdir = (struct page_dir_ent*)P2V(F2A(alloc_frame()));
-	if(!kern_pgdir){
-		LOG_ERR("Can't alloc heap");
-		panic();
-	}
-	create_kern_base_tab();
-	kern_pgdir[KERN_POS].addr = A2F(V2P(kern_base));
-	kern_pgdir[KERN_POS].P = 1;
-	kern_pgdir[KERN_POS].R = 1;
+	//TODO HACK - hardcoded address, fix it
+	kern_pgdir = (struct page_dir_ent*)0xc0116000;
 	create_kern_heap_tab();
-	kern_pgdir[KERN_POS+1].addr = A2F(V2P(kern_heap));
-	kern_pgdir[KERN_POS+1].P = 1;
-	kern_pgdir[KERN_POS+1].R = 1;
-	set_cr3(V2P(kern_pgdir));
 }
 
 void* alloc_page()

@@ -34,6 +34,9 @@ section .bss
 	resb 4096
 	pgtab:
 	resb 4096
+	;;self_tab is last page table, poining to kernel page tables
+	pgtab_self:
+	resb 4096
 
 ;	mem_ptr dd 0
 
@@ -64,6 +67,23 @@ section .multiboot.text
 		add eax, dword 0x4
 		cmp eax, ecx
 		jl next_page
+
+		;setup pgdir self_tab entry
+		;map last entry
+		mov eax, (pgtab_self - PG_KERN)
+		mov ebx, (pgdir - PG_KERN)
+		mov [ebx + 1023*4], eax
+		or [ebx + 1023*4], dword 0x3
+		;setup table
+		mov ebx, (pgtab - PG_KERN)
+		mov [eax], ebx
+		or [eax], dword 0x3
+		mov [eax+PG_KERN_POS*4], ebx
+		or [eax+PG_KERN_POS*4], dword 0x3
+		mov ebx, (pgtab_self - PG_KERN)
+		mov [eax+1023*4], ebx
+		or [eax+1023*4], dword 0x3
+		
 
 		;enable paging
 		mov eax, (pgdir - PG_KERN)
