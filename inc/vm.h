@@ -23,6 +23,7 @@ void* vtop(void* vaddr);
 void set_upgdir(void* pgdir);
 void set_kpgdir();
 void map_frame(uint32_t frame, void* addr);
+void copy_user_space(void* pgdir1, void* pgdir2);
 
 void copy_from_user(void* to, void* from, unsigned len);
 void copy_to_user(void* to, void* from, unsigned len);

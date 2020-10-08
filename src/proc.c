@@ -188,15 +188,27 @@ static void set_active_proc(uint32_t pid)
 	currproc = procs+pid;
 }
 
+static void fork()
+{
+	uint32_t pid = create_process();
+	procs[pid].pgdir = setup_user();
+	copy_user_space(currproc->pgdir, procs[pid].pgdir);
+	memcpy(procs[pid].tf, currproc->tf, sizeof(struct trapframe));
+	currproc->tf->eax = pid;
+	procs[pid].tf->eax = 0;
+	procs[pid].start = 1;
+	procs[pid].pid = pid;
+}
+
 void scheduler()
 {
+	add_syscall(5, fork, 0);
 	//init scheduler
 	set_tss();
 	sched_proc.ctx = halloc(sizeof(struct context));
 	if(!sched_proc.ctx){
 		LOG_ERR("Cant allocate sched context");
 	}
-	setup_init_proc();
 	setup_init_proc();
 
 	for(;;){

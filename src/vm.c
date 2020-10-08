@@ -180,6 +180,16 @@ void set_upgdir(void* pgdir)
 	set_cr3(pgdir);
 }
 
+void copy_user_space(void* pgdir1, void* pgdir2)
+{
+	void* temp1 = TEMP_POS;
+	void* temp2 = TEMP_POS+PAGE_SIZE;
+
+	map_by_pgdir_addr((void*)(0x0), pgdir1, temp1);
+	map_by_pgdir_addr((void*)(0x0), pgdir2, temp2);
+	memcpy(temp2, temp1, PAGE_SIZE);
+}
+
 //pg contains kernel space
 //TODO this function works only on 1 page
 void copy_from_user(void* to, void* from, unsigned len)
