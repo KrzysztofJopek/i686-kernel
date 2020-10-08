@@ -64,6 +64,28 @@ struct page_tab_ent* get_kern_page_tab(uint32_t index)
 	return dest_tab;
 }
 
+//read pgdir, pgtab and map frame on given address
+//pgdir is physical address
+static void map_by_pgdir_addr(void* pg_addr, void* pgdir, void* dest_addr)
+{
+	if((uint32_t)dest_addr%PAGE_SIZE || (uint32_t)pg_addr%PAGE_SIZE){
+		LOG_ERR("address not page aligned\n");
+		panic();
+	}
+	uint32_t pg_addr_num = (uint32_t)pg_addr;
+
+	uint32_t pd = pg_addr_num >> 22;
+	uint32_t pt = (pg_addr_num >> 12) & 0x03FF;
+
+	map_frame(A2F(pgdir), dest_addr);
+	uint32_t tab_addr = ((struct page_dir_ent*)dest_addr)[pd].addr;
+
+	map_frame(tab_addr, dest_addr);
+	uint32_t frame_addr = ((struct page_tab_ent*)dest_addr)[pt].addr;
+
+	map_frame(frame_addr, dest_addr);
+}
+
 //frame is 20bit frame position returned from alloc_frame()
 //addr need to me page aligned
 void map_frame(uint32_t frame, void* addr)
@@ -105,36 +127,6 @@ void setup_vm()
 	create_kern_heap_tab();
 }
 
-void* alloc_page()
-{
-	void* page = P2V(F2A(alloc_frame()));
-	if(!page){
-		LOG_ERR("OOM");
-		panic();
-	}
-	uint32_t dir_pos = (uint32_t)page >> 22 ;
-	uint32_t tab_pos = ((uint32_t)page << 10) >> 22 ;
-	if(kern_pgdir[dir_pos].P == 0){
-		kern_pgdir[dir_pos].addr = A2F(res_page);
-		kern_pgdir[dir_pos].P = 1;
-		kern_pgdir[dir_pos].R = 1;
-		res_page = P2V(F2A(alloc_frame()));
-		if(!res_page){
-			LOG_ERR("res_page OOM");
-			panic();
-		}
-		if((uint32_t)res_page >> 22 != dir_pos){
-			LOG_ERR("res_page BUG, can't handle it this way");
-			panic();
-		}
-	}
-	struct page_tab_ent* tab = P2V(F2A(kern_pgdir[dir_pos].addr));
-	tab[tab_pos].addr = A2F(V2P(page));
-	tab[tab_pos].P = 1;
-	tab[tab_pos].R = 1;
-	return page;
-}
-
 void free_page(void* addr)
 {
 	uint32_t dir_pos = (uint32_t)addr >> 22 ;
@@ -146,41 +138,37 @@ void free_page(void* addr)
 	free_frame(A2F(addr));
 }
 
+void init_start();
+void init_end();
+#define TEMP_POS ((void*)0xFF000000)
 /*
  * Copy kernel space to user process,
  * setup one tab of pages starting at 0x0;
  * TODO - 0x0 page should generate SEGINT
  */
-void setup_user(void* pgdir)
+void* setup_user()
 {
-	memcpy(pgdir, kern_pgdir, PAGE_SIZE);
+	uint32_t user_pgdir = alloc_frame();
+	map_frame(user_pgdir, TEMP_POS);
+	memcpy(TEMP_POS, kern_pgdir, PAGE_SIZE);
+	uint32_t user_pgtab = alloc_frame();
+	((struct page_dir_ent*)TEMP_POS)[0].addr = user_pgtab;
+	((struct page_dir_ent*)TEMP_POS)[0].P = 1;
+	((struct page_dir_ent*)TEMP_POS)[0].R = 1;
+	((struct page_dir_ent*)TEMP_POS)[0].U = 1;
 
-	struct page_tab_ent* user_space = (struct page_tab_ent*)alloc_page();
-	if(!user_space){
-		LOG_ERR("Can't user_space tab");
-		panic();
-	}
-	for(int i=0; i<PAGE_ENTRY; i++){
-		user_space[i].addr = i;
-		user_space[i].P = 1;
-		user_space[i].R = 1;
-		user_space[i].U = 1;
-	}
+	map_frame(user_pgtab, TEMP_POS);
+	uint32_t user_frame = alloc_frame();
+	((struct page_tab_ent*)TEMP_POS)[0].addr = user_frame;
+	((struct page_tab_ent*)TEMP_POS)[0].P = 1;
+	((struct page_tab_ent*)TEMP_POS)[0].R = 1;
+	((struct page_tab_ent*)TEMP_POS)[0].U = 1;
 
-	
-	struct page_dir_ent* pg = pgdir;
-	pg[0].addr = A2F(V2P(user_space));
-	pg[0].P = 1;
-	pg[0].R = 1;
-	pg[0].U = 1;
+	map_frame(user_frame, TEMP_POS);
+	memcpy(TEMP_POS + 0x10, (void*)init_start, init_end-init_start);
+	return F2A(user_pgdir);
 }
 
-void setup_code(void* pgdir, void* code, size_t size)
-{
-	set_cr3(V2P(pgdir));
-	memcpy((void*)0x10, code, size);
-	set_cr3(V2P(kern_pgdir));
-}
 
 void set_kpgdir()
 {
@@ -189,18 +177,18 @@ void set_kpgdir()
 
 void set_upgdir(void* pgdir)
 {
-	set_cr3(V2P(pgdir));
+	set_cr3(pgdir);
 }
 
 //pg contains kernel space
+//TODO this function works only on 1 page
 void copy_from_user(void* to, void* from, unsigned len)
 {
 	void* pg = currproc->pgdir;
-	set_cr3(V2P(pg));
-
-	memcpy(to, from, len);
-
-	set_cr3(V2P(kern_pgdir));
+	uint32_t from_num = (uint32_t)from;
+	map_by_pgdir_addr((void*)(from_num & ~(PAGE_SIZE-1)), pg, (TEMP_POS));
+	
+	memcpy(to, (TEMP_POS+(from_num%4096)), len);
 }
 
 void copy_to_user(void* to, void* from, unsigned len)

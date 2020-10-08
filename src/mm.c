@@ -47,6 +47,8 @@ uint32_t alloc_frame()
 		rp->used = 1;
 		return rp->addr;
 	}
+	LOG_ERR("OOM");
+	panic();
 	return 0;
 }
 
