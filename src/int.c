@@ -7,6 +7,7 @@
 #include "exc.h"
 #include "vm.h"
 #include "proc.h"
+#include "log.h"
 
 #define IDT_SIZE 256
 #define PIC1_CMD 0x20
@@ -106,7 +107,9 @@ void keyboard_handler_main()
 	uint8_t status = inb(0x64); //keyboard status port 
 	if(status * 0x01){
 		uint8_t c = inb(0x60);
-		putc(kbdus[c]);
+		if(c < 128){
+			putc(kbdus[c]);
+		}
 	}
 	else{
 		//error

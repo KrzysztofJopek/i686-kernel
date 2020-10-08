@@ -48,6 +48,11 @@ void print(const uint8_t* str)
 		if(*str == '\n'){
 			vid_pos = (vid_pos/MAX_W + 1) * MAX_W;
 		}
+		else if(*str == '\b'){
+			if(vid_pos % MAX_W){
+				vidp[--vid_pos].sym = ' ';
+			}
+		}
 		else{
 			vidp[vid_pos++].sym = *str;
 		}
