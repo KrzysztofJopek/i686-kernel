@@ -93,3 +93,25 @@ uint32_t itostr(int64_t it, char* res, uint32_t base)
 	*res = '\0';
 	return size;
 }
+
+uint32_t strcmp(char* str1, char* str2){
+	if(!str1){
+		LOG_WRN("str1 == NULL");
+		return 0;
+	}
+	if(!str2){
+		LOG_WRN("str2 == NULL");
+		return 0;
+	}
+	while(*str1 && *str2){
+		if(*str1 != *str2){
+			break;
+		}
+		str1++;
+		str2++;
+	}
+	if(*str1 < *str2){
+		return -1;
+	}
+	return *str1 > *str2;
+}

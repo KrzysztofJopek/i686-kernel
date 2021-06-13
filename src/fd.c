@@ -16,6 +16,7 @@ struct fd fds[MAX_FD];
 
 //TODO make register API
 extern struct fops* COM_fops;
+extern struct fops* USTAR_fops;
 
 
 static struct fd* get_fdp(int32_t fd)
@@ -52,6 +53,7 @@ static int32_t sys_read(int32_t fd, int32_t buff, int32_t size);
 static int32_t sys_write(int32_t fd, int32_t buff, int32_t size);
 static int32_t sys_open(int32_t path);
 static int32_t sys_close(int32_t fd);
+
 void setup_fd()
 {
 	for(int i=0; i<MAX_FD; i++){
@@ -78,9 +80,20 @@ int32_t open(uint8_t* path)
 	//XXX "C1" string == COM1
 	if(path[0] == 'C' && path[1] == '1' && path[2] == '\0'){
 		int32_t local_fd = COM_fops->open(path);
+		if(local_fd < 0){
+			return -4;
+		}
 		struct fd* fdp = get_fdp(fd);
-		fdp->fd = local_fd;
-		fdp->fops = COM_fops;
+		fds_add(fdp, local_fd, COM_fops);
+		return fd;
+	}
+	if(path[0] == 'u' && path[1] == 's' && path[2] == '/'){
+		int32_t local_fd = USTAR_fops->open(path);
+		if(local_fd < 0){
+			return -4;
+		}
+		struct fd* fdp = get_fdp(fd);
+		fds_add(fdp, local_fd, USTAR_fops);
 		return fd;
 	}
 	return -3;
@@ -92,7 +105,7 @@ int32_t write(int32_t fd, uint8_t* buff, uint32_t size)
 	if(!fdp){
 		return -1;
 	}
-	return fdp->fops->write(fd, buff, size);
+	return fdp->fops->write(fdp->fd, buff, size);
 }
 
 int32_t read(int32_t fd, uint8_t* buff, uint32_t size)
@@ -101,7 +114,7 @@ int32_t read(int32_t fd, uint8_t* buff, uint32_t size)
 	if(!fdp){
 		return -1;
 	}
-	return fdp->fops->read(fd, buff, size);
+	return fdp->fops->read(fdp->fd, buff, size);
 }
 
 int32_t close(int32_t fd)
@@ -110,7 +123,7 @@ int32_t close(int32_t fd)
 	if(!fdp){
 		return -1;
 	}
-	int32_t res = fdp->fops->close(fd);
+	int32_t res = fdp->fops->close(fdp->fd);
 	fds_del(fdp);
 	return res;
 }

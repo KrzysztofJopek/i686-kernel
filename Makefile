@@ -65,7 +65,7 @@ clean_tags:
 	@echo Tags cleaned
 
 run: kern
-	qemu-system-i386 -s -kernel kern -serial stdio
+	qemu-system-i386 -s -kernel kern -serial stdio -initrd initramfs.tar
 
 gdb:
 	$(GDB) kern -x .gdbargs

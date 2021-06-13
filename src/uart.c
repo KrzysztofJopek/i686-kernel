@@ -55,13 +55,14 @@ static void uart_putc(uint8_t c, uint16_t port)
 	while(!uart_write_ready){}
 	outb(c, port);
 }
-int32_t uart_open(uint8_t* path)
+
+static int32_t uart_open(uint8_t* path)
 {
 	//always return 1 for now
 	return 1;
 }
 
-int32_t uart_write(int32_t fd, uint8_t* buff, uint32_t count)
+static int32_t uart_write(int32_t fd, uint8_t* buff, uint32_t count)
 {
 	//ignore fd for now
 	if(buff == (void*)0){
@@ -72,19 +73,19 @@ int32_t uart_write(int32_t fd, uint8_t* buff, uint32_t count)
 	}
 }
 
-int32_t uart_read(int32_t fd, uint8_t* buff, uint32_t count)
+static int32_t uart_read(int32_t fd, uint8_t* buff, uint32_t count)
 {
 	//not implemented
 	return 0;
 }
 
-int32_t uart_close(int32_t fd)
+static int32_t uart_close(int32_t fd)
 {
 	//always return success for now
 	return 0;
 }
 
-struct fops fops = {
+static struct fops fops = {
 	.open = uart_open,
 	.write = uart_write,
 	.read = uart_read,
