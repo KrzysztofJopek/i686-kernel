@@ -95,7 +95,7 @@ static int32_t ustar_read(int32_t fd, uint8_t* buff, uint32_t count)
 	if(!ustar_fs_ready){
 		return -1;
 	}
-	if(fd < 0){
+	if(fd < 0 && fd >= MAX_FD){
 		return -2;
 	}
 	struct file* file = curr_fs.files + fd;
@@ -112,7 +112,16 @@ static int32_t ustar_write(int32_t fd, uint8_t* buff, uint32_t count)
 	if(!ustar_fs_ready){
 		return -1;
 	}
-	return 0;
+	if(fd < 0 && fd >= MAX_FD){
+		return -2;
+	}
+	struct file* file = curr_fs.files + fd;
+	if(file->valid == 0){
+		return -3;
+	}
+	count = count > file->size ? file->size : count;
+	memcpy(file->data, buff, count);
+	return count;
 }
 
 static int32_t ustar_close(int32_t fd)
@@ -120,6 +129,14 @@ static int32_t ustar_close(int32_t fd)
 	if(!ustar_fs_ready){
 		return -1;
 	}
+	if(fd < 0 && fd >= MAX_FD){
+		return -2;
+	}
+	struct file* file = curr_fs.files + fd;
+	if(file->valid == 0){
+		return -3;
+	}
+	file->valid = 0;
 	return 0;
 }
 
